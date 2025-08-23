@@ -1,0 +1,514 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - LetterFlow{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-primary">
+                <i class="bi bi-house"></i> Dashboard
+            </h1>
+            <p class="text-muted mb-0">
+                Welcome back, {{ user.get_full_name|default:user.username }}!
+            </p>
+        </div>
+        <div class="text-end">
+            <small class="text-muted">
+                <i class="bi bi-clock"></i> {{ user.get_role_display }}
+            </small>
+        </div>
+    </div>
+
+    {% if dashboard_type == 'admin' %}
+    <!-- Admin Dashboard -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Clusters
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_clusters }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-diagram-3 fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total FCPs
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_fcps }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-building fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Shipments
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_shipments }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-box fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Users
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_users }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-people fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Statistics -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-graph-up"></i> This Month's Statistics
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-2 col-6 mb-3">
+                            <div class="text-center">
+                                <div class="h4 text-primary">{{ monthly_stats.outgoing_created|default:0 }}</div>
+                                <small class="text-muted">Outgoing Created</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3">
+                            <div class="text-center">
+                                <div class="h4 text-success">{{ monthly_stats.outgoing_received|default:0 }}</div>
+                                <small class="text-muted">Outgoing Received</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3">
+                            <div class="text-center">
+                                <div class="h4 text-info">{{ monthly_stats.returns_created|default:0 }}</div>
+                                <small class="text-muted">Returns Created</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3">
+                            <div class="text-center">
+                                <div class="h4 text-warning">{{ monthly_stats.returns_received|default:0 }}</div>
+                                <small class="text-muted">Returns Received</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3">
+                            <div class="text-center">
+                                <div class="h4 text-success">{{ monthly_stats.returns_posted|default:0 }}</div>
+                                <small class="text-muted">Returns Posted</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Actions -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> Pending Outgoing Confirmations
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="h2 text-warning">{{ pending_outgoing }}</div>
+                    <p class="mb-0">Outgoing shipments waiting for collection centre confirmation</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-arrow-return-left"></i> Pending Return Confirmations
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="h2 text-info">{{ pending_returns }}</div>
+                    <p class="mb-0">Return shipments waiting for national office confirmation</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% elif dashboard_type == 'sdsa' %}
+    <!-- SDSA Dashboard -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Managed Clusters
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ managed_clusters.count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-diagram-3 fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Pending Returns
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_returns }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-arrow-return-left fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Ready to Post
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_posted }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-check-circle fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                This Month
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ monthly_stats.outgoing_created|default:0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-calendar fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightning"></i> Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a href="{% url 'shipping:create_outgoing_shipment' %}" class="btn btn-primary btn-lg w-100 mb-3">
+                                <i class="bi bi-plus-circle"></i> Create Outgoing Shipment
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{% url 'shipping:shipment_list' %}?direction=RET&status=CREATED" class="btn btn-outline-primary btn-lg w-100 mb-3">
+                                <i class="bi bi-list-check"></i> View Pending Returns
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% elif dashboard_type == 'cc' %}
+    <!-- Collection Centre Dashboard -->
+    {% if error %}
+    <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle"></i> {{ error }}
+    </div>
+    {% else %}
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Cluster
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ cluster.name }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-diagram-3 fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Collection Centre
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ cc_fcp.code }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-building fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Pending Confirmations
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_outgoing }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-exclamation-triangle fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                This Month
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ monthly_stats.outgoing_received|default:0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-calendar fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightning"></i> Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a href="{% url 'shipping:create_return_shipment' %}" class="btn btn-primary btn-lg w-100 mb-3">
+                                <i class="bi bi-arrow-return-left"></i> Create Return Shipment
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{% url 'shipping:shipment_list' %}?direction=OUT&status=CREATED" class="btn btn-outline-primary btn-lg w-100 mb-3">
+                                <i class="bi bi-list-check"></i> Confirm Incoming Shipments
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-clock-history"></i> Recent Activity
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if dashboard_type == 'admin' and recent_shipments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Direction</th>
+                                    <th>Cluster</th>
+                                    <th>Collection Centre</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for shipment in recent_shipments %}
+                                <tr>
+                                    <td>#{{ shipment.id }}</td>
+                                    <td>
+                                        {% if shipment.direction == 'OUT' %}
+                                        <span class="badge bg-primary">Outgoing</span>
+                                        {% else %}
+                                        <span class="badge bg-info">Return</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ shipment.cluster.name }}</td>
+                                    <td>{{ shipment.collection_centre.code }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ shipment.get_status_display }}</span>
+                                    </td>
+                                    <td>{{ shipment.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'shipping:shipment_detail' shipment.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% elif dashboard_type == 'sdsa' and recent_outgoing %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Cluster</th>
+                                    <th>Collection Centre</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for shipment in recent_outgoing %}
+                                <tr>
+                                    <td>#{{ shipment.id }}</td>
+                                    <td>{{ shipment.cluster.name }}</td>
+                                    <td>{{ shipment.collection_centre.code }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ shipment.get_status_display }}</span>
+                                    </td>
+                                    <td>{{ shipment.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'shipping:shipment_detail' shipment.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% elif dashboard_type == 'cc' and recent_outgoing %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for shipment in recent_outgoing %}
+                                <tr>
+                                    <td>#{{ shipment.id }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ shipment.get_status_display }}</span>
+                                    </td>
+                                    <td>{{ shipment.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'shipping:shipment_detail' shipment.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No recent activity to display.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

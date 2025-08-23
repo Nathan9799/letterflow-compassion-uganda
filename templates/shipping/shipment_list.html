@@ -1,0 +1,441 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shipments - LetterFlow{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-primary">
+                <i class="bi bi-box"></i> Shipments
+            </h1>
+            <p class="text-muted mb-0">Track and manage all shipments</p>
+        </div>
+        <div>
+            {% if user.is_sdsa %}
+            <a href="{% url 'shipping:create_outgoing_shipment' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create Outgoing
+            </a>
+            {% endif %}
+            {% if user.is_collection_centre %}
+            <a href="{% url 'shipping:create_return_shipment' %}" class="btn btn-primary">
+                <i class="bi bi-arrow-return-left"></i> Create Return
+            </a>
+            {% endif %}
+            {% if user.is_admin or user.is_sdsa %}
+            <a href="{% url 'shipping:export_shipments_csv' %}" class="btn btn-outline-primary ms-2">
+                <i class="bi bi-download"></i> Export CSV
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h6 class="mb-0">
+                <i class="bi bi-funnel"></i> Filters
+            </h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="cluster" class="form-label">Cluster</label>
+                    <select name="cluster" id="cluster" class="form-select">
+                        <option value="">All Clusters</option>
+                        {% for cluster in clusters %}
+                        <option value="{{ cluster.id }}" {% if cluster.id|stringformat:"s" == current_filters.cluster %}selected{% endif %}>
+                            {{ cluster.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-2">
+                    <label for="direction" class="form-label">Direction</label>
+                    <select name="direction" id="direction" class="form-select">
+                        <option value="">All Directions</option>
+                        {% for value, label in directions %}
+                        <option value="{{ value }}" {% if value == current_filters.direction %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-2">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        {% for value, label in statuses %}
+                        <option value="{{ value }}" {% if value == current_filters.status %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-2">
+                    <label for="date_from" class="form-label">From Date</label>
+                    <input type="date" class="form-control" id="date_from" name="date_from" 
+                           value="{{ current_filters.date_from|default:'' }}">
+                </div>
+                
+                <div class="col-md-2">
+                    <label for="date_to" class="form-label">To Date</label>
+                    <input type="date" class="form-control" id="date_to" name="date_to" 
+                           value="{{ current_filters.date_to|default:'' }}">
+                </div>
+                
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+            
+            {% if current_filters %}
+            <div class="mt-3">
+                <a href="{% url 'shipping:shipment_list' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-x-circle"></i> Clear Filters
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Shipments Table -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">
+                <i class="bi bi-list"></i> Shipments ({{ page_obj.paginator.count }} total)
+            </h6>
+            <div class="d-flex align-items-center">
+                <span class="text-muted me-3">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if shipments %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Direction</th>
+                            <th>Cluster</th>
+                            <th>Collection Centre</th>
+                            <th>Status</th>
+                            <th>ETA</th>
+                            <th>Total Packages</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for shipment in shipments %}
+                        <tr>
+                            <td>
+                                <strong>#{{ shipment.id }}</strong>
+                            </td>
+                            <td>
+                                {% if shipment.direction == 'OUT' %}
+                                <span class="badge bg-primary">
+                                    <i class="bi bi-arrow-up"></i> Outgoing
+                                </span>
+                                {% else %}
+                                <span class="badge bg-info">
+                                    <i class="bi bi-arrow-return-left"></i> Return
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ shipment.cluster.name }}</strong>
+                            </td>
+                            <td>
+                                <code>{{ shipment.collection_centre.code }}</code>
+                                {% if shipment.collection_centre.name %}
+                                <br><small class="text-muted">{{ shipment.collection_centre.name }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if shipment.status == 'CREATED' %}
+                                <span class="badge bg-secondary">Created/Sent</span>
+                                {% elif shipment.status == 'RECEIVED_CC' %}
+                                <span class="badge bg-info">Received at CC</span>
+                                {% elif shipment.status == 'DISTRIBUTED' %}
+                                <span class="badge bg-success">Distributed</span>
+                                {% elif shipment.status == 'RECEIVED_NO' %}
+                                <span class="badge bg-warning">Received at NO</span>
+                                {% elif shipment.status == 'POSTED' %}
+                                <span class="badge bg-success">Posted</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if shipment.estimated_delivery_date %}
+                                <span class="{% if shipment.estimated_delivery_date < today %}text-danger{% endif %}">
+                                    {{ shipment.estimated_delivery_date|date:"M d, Y" }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ shipment.total_packages }}</strong>
+                                {% if shipment.total_received > 0 %}
+                                <br><small class="text-muted">{{ shipment.total_received }} received</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ shipment.created_at|date:"M d, Y" }}
+                                <br><small class="text-muted">{{ shipment.created_at|time:"H:i" }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'shipping:shipment_detail' shipment.pk %}" 
+                                       class="btn btn-sm btn-outline-primary" title="View Details">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    
+                                    {% if shipment.can_confirm_receipt_for_current_user %}
+                                    <button type="button" class="btn btn-sm btn-outline-success" 
+                                            data-bs-toggle="modal" data-bs-target="#confirmModal{{ shipment.id }}"
+                                            title="Confirm Receipt">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                    {% endif %}
+                                    
+                                    {% if shipment.can_mark_distributed_for_current_user %}
+                                    <button type="button" class="btn btn-sm btn-outline-info" 
+                                            data-bs-toggle="modal" data-bs-target="#distributeModal{{ shipment.id }}"
+                                            title="Mark Distributed">
+                                        <i class="bi bi-share"></i>
+                                    </button>
+                                    {% endif %}
+                                    
+                                    {% if shipment.can_mark_posted_for_current_user %}
+                                    <button type="button" class="btn btn-sm btn-outline-success" 
+                                            data-bs-toggle="modal" data-bs-target="#postModal{{ shipment.id }}"
+                                            title="Mark Posted">
+                                        <i class="bi bi-send-check"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="card-footer">
+                <nav aria-label="Shipments pagination">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="bi bi-chevron-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                {{ num }}
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="bi bi-chevron-double-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+            
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-inbox fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No shipments found</h5>
+                <p class="text-muted">
+                    {% if current_filters %}
+                    Try adjusting your filters or 
+                    <a href="{% url 'shipping:shipment_list' %}">clear all filters</a>.
+                    {% else %}
+                    No shipments have been created yet.
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Action Modals -->
+{% for shipment in shipments %}
+    {% if shipment.can_confirm_receipt %}
+    <!-- Confirm Receipt Modal -->
+    <div class="modal fade" id="confirmModal{{ shipment.id }}" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Receipt - Shipment #{{ shipment.id }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" action="{% url 'shipping:confirm_receipt' shipment.pk %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <p class="text-muted mb-3">
+                            Please confirm the quantities received for each FCP in this shipment.
+                        </p>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>FCP</th>
+                                        <th>Planned</th>
+                                        <th>Received</th>
+                                        <th>Note</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in shipment.items.all %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ item.fcp.code }}</strong>
+                                            {% if item.fcp.name %}
+                                            <br><small class="text-muted">{{ item.fcp.name }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ item.qty_planned }}</td>
+                                        <td>
+                                            <input type="number" name="qty_received_{{ item.id }}" 
+                                                   value="{{ item.qty_planned }}" min="0" 
+                                                   class="form-control form-control-sm">
+                                        </td>
+                                        <td>
+                                            <textarea name="discrepancy_note_{{ item.id }}" 
+                                                      class="form-control form-control-sm" rows="2" 
+                                                      placeholder="Note if quantity differs"></textarea>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Confirm Receipt
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if shipment.can_mark_distributed_for_current_user %}
+    <!-- Mark Distributed Modal -->
+    <div class="modal fade" id="distributeModal{{ shipment.id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Mark Distributed - Shipment #{{ shipment.id }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" action="{% url 'shipping:mark_distributed' shipment.pk %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <p>Are you sure you want to mark this shipment as distributed to FCPs?</p>
+                        <p class="text-muted small">
+                            This action will update the shipment status and record the distribution timestamp.
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-info">
+                            <i class="bi bi-share"></i> Mark Distributed
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if shipment.can_mark_posted_for_current_user %}
+    <!-- Mark Posted Modal -->
+    <div class="modal fade" id="postModal{{ shipment.id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Mark Posted - Shipment #{{ shipment.id }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" action="{% url 'shipping:mark_posted' shipment.pk %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <p>Are you sure you want to mark this return shipment as posted?</p>
+                        <p class="text-muted small">
+                            This action will finalize the shipment and record the posting timestamp.
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-send-check"></i> Mark Posted
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-submit form when filters change
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterForm = document.querySelector('form[method="get"]');
+        const filterInputs = filterForm.querySelectorAll('select, input[type="date"]');
+        
+        filterInputs.forEach(function(input) {
+            input.addEventListener('change', function() {
+                filterForm.submit();
+            });
+        });
+    });
+</script>
+{% endblock %}

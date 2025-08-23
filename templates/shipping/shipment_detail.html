@@ -1,0 +1,508 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shipment #{{ shipment.id }} - LetterFlow{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-primary">
+                <i class="bi bi-box"></i> Shipment #{{ shipment.id }}
+            </h1>
+            <p class="text-muted mb-0">
+                {{ shipment.get_direction_display }} - {{ shipment.cluster.name }}
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'shipping:shipment_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Shipments
+            </a>
+        </div>
+    </div>
+
+    <!-- Shipment Overview -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Shipment Details
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted"><strong>Direction:</strong></td>
+                                    <td>
+                                        {% if shipment.direction == 'OUT' %}
+                                        <span class="badge bg-primary">
+                                            <i class="bi bi-arrow-up"></i> Outgoing
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-info">
+                                            <i class="bi bi-arrow-return-left"></i> Return
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><strong>Cluster:</strong></td>
+                                    <td>{{ shipment.cluster.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><strong>Collection Centre:</strong></td>
+                                    <td>
+                                        <code>{{ shipment.collection_centre.code }}</code>
+                                        {% if shipment.collection_centre.name %}
+                                        - {{ shipment.collection_centre.name }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><strong>Status:</strong></td>
+                                    <td>
+                                        {% if shipment.status == 'CREATED' %}
+                                        <span class="badge bg-secondary">Created/Sent</span>
+                                        {% elif shipment.status == 'RECEIVED_CC' %}
+                                        <span class="badge bg-info">Received at Collection Centre</span>
+                                        {% elif shipment.status == 'DISTRIBUTED' %}
+                                        <span class="badge bg-success">Distributed to FCPs</span>
+                                        {% elif shipment.status == 'RECEIVED_NO' %}
+                                        <span class="badge bg-warning">Received at National Office</span>
+                                        {% elif shipment.status == 'POSTED' %}
+                                        <span class="badge bg-success">Posted</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted"><strong>ETA:</strong></td>
+                                    <td>
+                                        {% if shipment.estimated_delivery_date %}
+                                        <span class="{% if shipment.estimated_delivery_date < today %}text-danger{% endif %}">
+                                            {{ shipment.estimated_delivery_date|date:"M d, Y" }}
+                                        </span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><strong>Total Packages:</strong></td>
+                                    <td>
+                                        <strong>{{ shipment.total_packages }}</strong>
+                                        {% if shipment.total_received > 0 %}
+                                        <br><small class="text-muted">{{ shipment.total_received }} received</small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><strong>Created By:</strong></td>
+                                    <td>{{ shipment.created_by.get_full_name|default:shipment.created_by.username }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><strong>Created:</strong></td>
+                                    <td>{{ shipment.created_at|date:"M d, Y H:i" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    {% if shipment.notes %}
+                    <div class="mt-3">
+                        <strong>Notes:</strong>
+                        <p class="text-muted mb-0">{{ shipment.notes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Status Timeline -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-clock-history"></i> Status Timeline
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Created/Sent</h6>
+                                <small class="text-muted">{{ shipment.created_at|date:"M d, Y H:i" }}</small>
+                            </div>
+                        </div>
+                        
+                        {% if shipment.received_at %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-info"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">
+                                    {% if shipment.direction == 'OUT' %}
+                                    Received at Collection Centre
+                                    {% else %}
+                                    Received at National Office
+                                    {% endif %}
+                                </h6>
+                                <small class="text-muted">{{ shipment.received_at|date:"M d, Y H:i" }}</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if shipment.distributed_at %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Distributed to FCPs</h6>
+                                <small class="text-muted">{{ shipment.distributed_at|date:"M d, Y H:i" }}</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if shipment.posted_at %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Posted</h6>
+                                <small class="text-muted">{{ shipment.posted_at|date:"M d, Y H:i" }}</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FCP Items -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-list-check"></i> FCP Allocations
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>FCP</th>
+                                    <th>Quantity Planned</th>
+                                    <th>Quantity Received</th>
+                                    <th>Status</th>
+                                    <th>Discrepancy Note</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in shipment.items.all %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ item.fcp.code }}</strong>
+                                        {% if item.fcp.name %}
+                                        <br><small class="text-muted">{{ item.fcp.name }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ item.qty_planned }}</span>
+                                    </td>
+                                    <td>
+                                        {% if item.qty_received is not None %}
+                                        <span class="badge {% if item.has_discrepancy %}bg-warning{% else %}bg-success{% endif %}">
+                                            {{ item.qty_received }}
+                                        </span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.qty_received is not None %}
+                                            {% if item.has_discrepancy %}
+                                            <span class="badge bg-warning">
+                                                <i class="bi bi-exclamation-triangle"></i> Discrepancy
+                                            </span>
+                                            {% else %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle"></i> Confirmed
+                                            </span>
+                                            {% endif %}
+                                        {% else %}
+                                        <span class="badge bg-secondary">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.discrepancy_note %}
+                                        <small class="text-muted">{{ item.discrepancy_note }}</small>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Actions -->
+    {% if shipment.can_confirm_receipt or shipment.can_mark_distributed or shipment.can_mark_posted %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-gear"></i> Available Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if shipment.can_confirm_receipt_for_current_user %}
+                        <div class="col-md-4">
+                            <div class="card border-success">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-check-circle fa-2x text-success mb-2"></i>
+                                    <h6>Confirm Receipt</h6>
+                                    <p class="text-muted small">
+                                        {% if shipment.direction == 'OUT' %}
+                                        Confirm that packages have been received at the Collection Centre
+                                        {% else %}
+                                        Confirm that return packages have been received at National Office
+                                        {% endif %}
+                                    </p>
+                                    <button type="button" class="btn btn-success" 
+                                            data-bs-toggle="modal" data-bs-target="#confirmModal">
+                                        <i class="bi bi-check-circle"></i> Confirm Receipt
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if shipment.can_mark_distributed %}
+                        <div class="col-md-4">
+                            <div class="card border-info">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-share fa-2x text-info mb-2"></i>
+                                    <h6>Mark Distributed</h6>
+                                    <p class="text-muted small">
+                                        Mark that packages have been distributed to individual FCPs
+                                    </p>
+                                    <button type="button" class="btn btn-info" 
+                                            data-bs-toggle="modal" data-bs-target="#distributeModal">
+                                        <i class="bi bi-share"></i> Mark Distributed
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if shipment.can_mark_posted %}
+                        <div class="col-md-4">
+                            <div class="card border-success">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-send-check fa-2x text-success mb-2"></i>
+                                    <h6>Mark Posted</h6>
+                                    <p class="text-muted small">
+                                        Mark that return packages have been posted/processed
+                                    </p>
+                                    <button type="button" class="btn btn-success" 
+                                            data-bs-toggle="modal" data-bs-target="#postModal">
+                                        <i class="bi bi-send-check"></i> Mark Posted
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Action Modals -->
+{% if shipment.can_confirm_receipt_for_current_user %}
+<!-- Confirm Receipt Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Receipt - Shipment #{{ shipment.id }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'shipping:confirm_receipt' shipment.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p class="text-muted mb-3">
+                        Please confirm the quantities received for each FCP in this shipment.
+                        {% if shipment.direction == 'OUT' %}
+                        This will update the status to "Received at Collection Centre".
+                        {% else %}
+                        This will update the status to "Received at National Office".
+                        {% endif %}
+                    </p>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>FCP</th>
+                                    <th>Planned</th>
+                                    <th>Received</th>
+                                    <th>Note</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in shipment.items.all %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ item.fcp.code }}</strong>
+                                        {% if item.fcp.name %}
+                                        <br><small class="text-muted">{{ item.fcp.name }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.qty_planned }}</td>
+                                    <td>
+                                        <input type="number" name="qty_received_{{ item.id }}" 
+                                               value="{{ item.qty_planned|default:item.qty_planned }}" 
+                                               min="0" class="form-control form-control-sm">
+                                    </td>
+                                    <td>
+                                        <textarea name="discrepancy_note_{{ item.id }}" 
+                                                  class="form-control form-control-sm" rows="2" 
+                                                  placeholder="Note if quantity differs"></textarea>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Confirm Receipt
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if shipment.can_mark_distributed %}
+<!-- Mark Distributed Modal -->
+<div class="modal fade" id="distributeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Mark Distributed - Shipment #{{ shipment.id }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'shipping:mark_distributed' shipment.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>Are you sure you want to mark this shipment as distributed to FCPs?</p>
+                    <p class="text-muted small">
+                        This action will update the shipment status to "Distributed" and record the distribution timestamp.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-info">
+                        <i class="bi bi-share"></i> Mark Distributed
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if shipment.can_mark_posted %}
+<!-- Mark Posted Modal -->
+<div class="modal fade" id="postModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Mark Posted - Shipment #{{ shipment.id }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'shipping:mark_posted' shipment.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>Are you sure you want to mark this return shipment as posted?</p>
+                    <p class="text-muted small">
+                        This action will finalize the shipment with status "Posted" and record the posting timestamp.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-send-check"></i> Mark Posted
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -22px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.timeline-content {
+    padding-left: 10px;
+}
+
+.timeline-content h6 {
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}

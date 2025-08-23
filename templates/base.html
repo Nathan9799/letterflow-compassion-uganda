@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Compassion International Uganda - Letter Tracking System{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --compassion-primary: #0066cc;
+            --compassion-primary-dark: #004499;
+            --compassion-primary-light: #e6f3ff;
+            --compassion-secondary: #ff9900;
+            --compassion-accent: #00cc99;
+            --compassion-success: #28a745;
+            --compassion-warning: #ffc107;
+            --compassion-danger: #dc3545;
+            --compassion-gray-100: #f8f9fa;
+            --compassion-gray-200: #e9ecef;
+            --compassion-gray-300: #dee2e6;
+            --compassion-gray-600: #6c757d;
+            --compassion-gray-800: #343a40;
+            --compassion-gray-900: #212529;
+            --compassion-white: #ffffff;
+            --compassion-shadow: 0 0.125rem 0.25rem rgba(0, 102, 204, 0.075);
+            --compassion-shadow-lg: 0 0.5rem 1rem rgba(0, 102, 204, 0.15);
+            --compassion-border-radius: 0.75rem;
+            --compassion-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--compassion-gray-100) 0%, var(--compassion-white) 100%);
+            min-height: 100vh;
+            color: var(--compassion-gray-800);
+        }
+
+        /* Modern Navbar */
+        .navbar {
+            background: linear-gradient(135deg, var(--compassion-white) 0%, var(--compassion-primary-light) 100%) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 102, 204, 0.1);
+            box-shadow: var(--compassion-shadow);
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--compassion-primary) !important;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .navbar-brand i {
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--compassion-primary), var(--compassion-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .navbar-nav .nav-link {
+            color: var(--compassion-gray-700) !important;
+            font-weight: 500;
+            padding: 0.75rem 1.25rem !important;
+            border-radius: var(--compassion-border-radius);
+            margin: 0 0.25rem;
+            transition: var(--compassion-transition);
+            position: relative;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: var(--compassion-primary) !important;
+            background-color: var(--compassion-primary-light);
+            transform: translateY(-1px);
+        }
+
+        .navbar-nav .nav-link.active {
+            color: var(--compassion-primary) !important;
+            background-color: var(--compassion-primary-light);
+            font-weight: 600;
+        }
+
+        .navbar-nav .nav-link i {
+            margin-right: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        /* User Dropdown */
+        .dropdown-menu {
+            border: none;
+            border-radius: var(--compassion-border-radius);
+            box-shadow: var(--compassion-shadow-lg);
+            padding: 0.5rem;
+            min-width: 220px;
+        }
+
+        .dropdown-item {
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            transition: var(--compassion-transition);
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--compassion-primary-light);
+            color: var(--compassion-primary);
+            transform: translateX(3px);
+        }
+
+        .dropdown-item i {
+            margin-right: 0.75rem;
+            color: var(--compassion-gray-600);
+        }
+
+        /* Modern Cards */
+        .card {
+            border: none;
+            border-radius: var(--compassion-border-radius);
+            box-shadow: var(--compassion-shadow);
+            transition: var(--compassion-transition);
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--compassion-shadow-lg);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--compassion-primary-light) 0%, var(--compassion-white) 100%);
+            border-bottom: 2px solid var(--compassion-primary);
+            padding: 1.5rem;
+            font-weight: 600;
+            color: var(--compassion-primary);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* Modern Buttons */
+        .btn {
+            border-radius: var(--compassion-border-radius);
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            transition: var(--compassion-transition);
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--compassion-primary) 0%, var(--compassion-primary-dark) 100%);
+            color: white;
+            box-shadow: var(--compassion-shadow);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--compassion-primary-dark) 0%, var(--compassion-primary) 100%);
+            transform: translateY(-2px);
+            box-shadow: var(--compassion-shadow-lg);
+        }
+
+        .btn-outline-primary {
+            color: var(--compassion-primary);
+            border: 2px solid var(--compassion-primary);
+            background: transparent;
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--compassion-primary);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--compassion-success) 0%, #1e7e34 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--compassion-warning) 0%, #e0a800 100%);
+            color: var(--compassion-gray-800);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--compassion-danger) 0%, #c82333 100%);
+            color: white;
+        }
+
+        /* Stats Cards */
+        .stats-card {
+            border-left: 4px solid var(--compassion-primary);
+            background: linear-gradient(135deg, var(--compassion-white) 0%, var(--compassion-primary-light) 100%);
+            transition: var(--compassion-transition);
+        }
+
+        .stats-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: var(--compassion-shadow-lg);
+        }
+
+        /* Tables */
+        .table {
+            border-radius: var(--compassion-border-radius);
+            overflow: hidden;
+            box-shadow: var(--compassion-shadow);
+        }
+
+        .table thead th {
+            background: linear-gradient(135deg, var(--compassion-primary-light) 0%, var(--compassion-white) 100%);
+            border-bottom: 2px solid var(--compassion-primary);
+            color: var(--compassion-primary);
+            font-weight: 600;
+            padding: 1rem;
+        }
+
+        .table tbody tr {
+            transition: var(--compassion-transition);
+        }
+
+        .table tbody tr:hover {
+            background-color: var(--compassion-primary-light);
+            transform: scale(1.01);
+        }
+
+        /* Forms */
+        .form-control, .form-select {
+            border-radius: var(--compassion-border-radius);
+            border: 2px solid var(--compassion-gray-200);
+            padding: 0.75rem 1rem;
+            transition: var(--compassion-transition);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--compassion-primary);
+            box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: var(--compassion-gray-700);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Alerts */
+        .alert {
+            border-radius: var(--compassion-border-radius);
+            border: none;
+            padding: 1rem 1.5rem;
+        }
+
+        .alert-info {
+            background: linear-gradient(135deg, var(--compassion-primary-light) 0%, var(--compassion-white) 100%);
+            color: var(--compassion-primary);
+            border-left: 4px solid var(--compassion-primary);
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, #d4edda 0%, var(--compassion-white) 100%);
+            color: var(--compassion-success);
+            border-left: 4px solid var(--compassion-success);
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, #fff3cd 0%, var(--compassion-white) 100%);
+            color: #856404;
+            border-left: 4px solid var(--compassion-warning);
+        }
+
+        .alert-danger {
+            background: linear-gradient(135deg, #f8d7da 0%, var(--compassion-white) 100%);
+            color: var(--compassion-danger);
+            border-left: 4px solid var(--compassion-danger);
+        }
+
+        /* Badges */
+        .badge {
+            border-radius: 0.5rem;
+            font-weight: 500;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .bg-primary {
+            background: linear-gradient(135deg, var(--compassion-primary) 0%, var(--compassion-primary-dark) 100%) !important;
+        }
+
+        .bg-success {
+            background: linear-gradient(135deg, var(--compassion-success) 0%, #1e7e34 100%) !important;
+        }
+
+        .bg-warning {
+            background: linear-gradient(135deg, var(--compassion-warning) 0%, #e0a800 100%) !important;
+        }
+
+        .bg-info {
+            background: linear-gradient(135deg, var(--compassion-accent) 0%, #00a085 100%) !important;
+        }
+
+        /* Progress Bars */
+        .progress {
+            border-radius: var(--compassion-border-radius);
+            height: 1rem;
+            background-color: var(--compassion-gray-200);
+        }
+
+        .progress-bar {
+            background: linear-gradient(135deg, var(--compassion-primary) 0%, var(--compassion-accent) 100%);
+            border-radius: var(--compassion-border-radius);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 0;
+            min-height: calc(100vh - 80px);
+        }
+
+        /* Page Headers */
+        .page-header {
+            background: linear-gradient(135deg, var(--compassion-primary-light) 0%, var(--compassion-white) 100%);
+            border-radius: var(--compassion-border-radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--compassion-shadow);
+        }
+
+        .page-header h1 {
+            color: var(--compassion-primary);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: var(--compassion-gray-600);
+            font-size: 1.1rem;
+            margin-bottom: 0;
+        }
+
+        /* Footer */
+        .footer {
+            background: linear-gradient(135deg, var(--compassion-primary-dark) 0%, var(--compassion-primary) 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-top: 4rem;
+            text-align: center;
+        }
+
+        .footer p {
+            margin-bottom: 0;
+            opacity: 0.9;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .navbar-brand {
+                font-size: 1.25rem;
+            }
+            
+            .navbar-brand i {
+                font-size: 1.5rem;
+            }
+            
+            .main-content {
+                padding: 1rem 0;
+            }
+            
+            .page-header {
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--compassion-gray-100);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--compassion-primary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--compassion-primary-dark);
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Modern Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'shipping:dashboard' %}">
+                <i class="bi bi-globe"></i>
+                <span>Compassion International Uganda</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'shipping:dashboard' %}">
+                            <i class="bi bi-house-door"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'shipment' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'shipping:shipment_list' %}">
+                            <i class="bi bi-box-seam"></i> Shipments
+                        </a>
+                    </li>
+                    {% if user.is_admin or user.is_sdsa %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}" href="{% url 'shipping:reports' %}">
+                            <i class="bi bi-graph-up-arrow"></i> Reports
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> {{ user.get_full_name|default:user.username }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><span class="dropdown-item-text text-muted">
+                                <i class="bi bi-shield-check"></i> {{ user.get_role_display }}
+                            </span></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'password_change' %}">
+                                <i class="bi bi-key"></i> Change Password
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'shipping:logout' %}">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content with Top Margin for Fixed Navbar -->
+    <div class="main-content" style="margin-top: 80px;">
+        <div class="container-fluid">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Beautiful Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>
+                <i class="bi bi-globe text-primary me-2"></i>
+                Empowering children and families through Christ's love
+            </p>
+            <p class="small opacity-75">
+                © 2025 Compassion International Uganda. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom Scripts -->
+    <script>
+        // Add fade-in animation to cards
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.classList.add('fade-in-up');
+            });
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

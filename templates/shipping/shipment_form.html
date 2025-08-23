@@ -1,0 +1,359 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - LetterFlow{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-primary">
+                <i class="bi bi-plus-circle"></i> {{ title }}
+            </h1>
+            <p class="text-muted mb-0">
+                {% if direction == 'OUT' %}
+                Create outgoing shipment from National Office to Collection Centre
+                {% else %}
+                Create return shipment from Collection Centre to National Office
+                {% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'shipping:shipment_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Shipments
+            </a>
+        </div>
+    </div>
+
+    <!-- Shipment Form -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Shipment Details
+                    </h6>
+                </div>
+                <div class="card-body">
+                                        <form method="post" id="shipmentForm">
+                        {% csrf_token %}
+                        
+
+                        
+                        <!-- Basic Information -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.cluster.id_for_label }}" class="form-label">
+                                    {{ form.cluster.label }}
+                                </label>
+                                {{ form.cluster }}
+                                {% if form.cluster.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.cluster.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.estimated_delivery_date.id_for_label }}" class="form-label">
+                                    {{ form.estimated_delivery_date.label }}
+                                </label>
+                                {{ form.estimated_delivery_date }}
+                                {% if form.estimated_delivery_date.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.estimated_delivery_date.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">
+                                {{ form.notes.label }}
+                            </label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.notes.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <hr>
+                        
+                        <!-- FCP Items -->
+                        <div class="mb-3">
+                            <h6 class="text-primary">
+                                <i class="bi bi-list-check"></i> FCP Allocations
+                            </h6>
+                            <p class="text-muted small">
+                                Add FCPs and specify the quantity of packages for each.
+                                {% if direction == 'OUT' %}
+                                Collection Centre FCPs are automatically excluded.
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        {{ formset.management_form }}
+                        <div id="fcpItems">
+                            {% for formset_form in formset %}
+                            <div class="fcp-item border rounded p-3 mb-3" data-form-index="{{ forloop.counter0 }}">
+                                <div class="row align-items-end">
+                                    <div class="col-md-5">
+                                        {{ formset_form.fcp.label_tag }}
+                                        {{ formset_form.fcp }}
+                                        {% if formset_form.fcp.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ formset_form.fcp.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-4">
+                                        {{ formset_form.qty_planned.label_tag }}
+                                        {{ formset_form.qty_planned }}
+                                        {% if formset_form.qty_planned.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ formset_form.qty_planned.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">&nbsp;</label>
+                                        <button type="button" class="btn btn-outline-danger btn-sm w-100 remove-fcp" 
+                                                {% if forloop.first and formset.forms|length == 1 %}disabled{% endif %}>
+                                            <i class="bi bi-trash"></i> Remove
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                {% if formset_form.non_field_errors %}
+                                <div class="alert alert-danger mt-2">
+                                    {{ formset_form.non_field_errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-outline-primary" id="addFcp">
+                                <i class="bi bi-plus-circle"></i> Add FCP
+                            </button>
+                        </div>
+                        
+                        <hr>
+                        
+                        <!-- Summary -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="text-muted mb-1">Total Packages</h6>
+                                        <h3 class="text-primary mb-0" id="totalPackages">0</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="text-muted mb-1">FCPs</h6>
+                                        <h3 class="text-primary mb-0" id="totalFcps">0</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% url 'shipping:shipment_list' %}" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Create Shipment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightbulb"></i> Help & Guidelines
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-primary">Shipment Process</h6>
+                        {% if direction == 'OUT' %}
+                        <ol class="small text-muted">
+                            <li>Select the target cluster</li>
+                            <li>Set estimated delivery date</li>
+                            <li>Add FCPs and allocate packages</li>
+                            <li>Collection Centre will confirm receipt</li>
+                            <li>Optional: Mark as distributed to FCPs</li>
+                        </ol>
+                        {% else %}
+                        <ol class="small text-muted">
+                            <li>Cluster and Collection Centre are auto-set</li>
+                            <li>Set estimated delivery date</li>
+                            <li>Add FCPs and specify return quantities</li>
+                            <li>National Office will confirm receipt</li>
+                            <li>SDSA will mark as posted</li>
+                        </ol>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-primary">Important Notes</h6>
+                        <ul class="small text-muted">
+                            <li>At least one FCP must be selected</li>
+                            <li>Quantities must be greater than 0</li>
+                            <li>Duplicate FCPs are not allowed</li>
+                            {% if direction == 'OUT' %}
+                            <li>Collection Centre FCPs are excluded</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Tip:</strong> Use the "Add FCP" button to add more FCPs to the shipment.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('=== FCP MANAGEMENT INITIALIZING ===');
+    
+    // Simple FCP management
+    const addFcpBtn = document.getElementById('addFcp');
+    const fcpItemsContainer = document.getElementById('fcpItems');
+    const totalPackages = document.getElementById('totalPackages');
+    const totalFcps = document.getElementById('totalFcps');
+    
+    console.log('Elements found:', {
+        addFcpBtn: addFcpBtn,
+        fcpItemsContainer: fcpItemsContainer,
+        totalPackages: totalPackages,
+        totalFcps: totalFcps
+    });
+    
+    if (addFcpBtn && fcpItemsContainer) {
+        // Add FCP row
+        addFcpBtn.addEventListener('click', function() {
+            console.log('Add FCP button clicked!');
+            
+            // Find the TOTAL_FORMS field - try different possible IDs
+            let formCount = document.getElementById('id_form-TOTAL_FORMS');
+            if (!formCount) {
+                formCount = document.querySelector('input[name*="TOTAL_FORMS"]');
+            }
+            if (!formCount) {
+                console.error('Could not find TOTAL_FORMS field');
+                return;
+            }
+            
+            console.log('Found TOTAL_FORMS field:', formCount);
+            
+            const currentCount = parseInt(formCount.value);
+            const newFormIndex = currentCount;
+            
+            // Clone the first FCP item
+            const firstItem = fcpItemsContainer.querySelector('.fcp-item');
+            if (!firstItem) return;
+            
+            const newItem = firstItem.cloneNode(true);
+            
+            // Update form index
+            newItem.setAttribute('data-form-index', newFormIndex);
+            newItem.querySelectorAll('input, select').forEach(input => {
+                // Handle both form- and formset_form- naming patterns
+                if (input.name.includes('form-')) {
+                    input.name = input.name.replace(/form-\d+/, `form-${newFormIndex}`);
+                    input.id = input.id.replace(/form-\d+/, `form-${newFormIndex}`);
+                } else if (input.name.includes('formset_form-')) {
+                    input.name = input.name.replace(/formset_form-\d+/, `formset_form-${newFormIndex}`);
+                    input.id = input.id.replace(/formset_form-\d+/, `formset_form-${newFormIndex}`);
+                }
+                input.value = '';
+            });
+            
+            // Enable remove button
+            const removeBtn = newItem.querySelector('.remove-fcp');
+            if (removeBtn) {
+                removeBtn.disabled = false;
+                removeBtn.addEventListener('click', function() {
+                    if (fcpItemsContainer.querySelectorAll('.fcp-item').length > 1) {
+                        newItem.remove();
+                        updateFormCount();
+                        updateTotals();
+                    }
+                });
+            }
+            
+            fcpItemsContainer.appendChild(newItem);
+            formCount.value = currentCount + 1;
+            updateTotals();
+        });
+        
+        // Remove FCP functionality for existing buttons
+        document.querySelectorAll('.remove-fcp').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (fcpItemsContainer.querySelectorAll('.fcp-item').length > 1) {
+                    this.closest('.fcp-item').remove();
+                    updateFormCount();
+                    updateTotals();
+                }
+            });
+        });
+        
+        // Update totals when quantities change
+        document.addEventListener('input', function(e) {
+            if (e.target.name.includes('qty_planned')) {
+                updateTotals();
+            }
+        });
+        
+        function updateTotals() {
+            let totalQty = 0;
+            let fcpCount = 0;
+            
+            document.querySelectorAll('input[name*="qty_planned"]').forEach(input => {
+                if (input.value && !isNaN(input.value)) {
+                    totalQty += parseInt(input.value);
+                    fcpCount++;
+                }
+            });
+            
+            if (totalPackages) totalPackages.textContent = totalQty;
+            if (totalFcps) totalFcps.textContent = fcpCount;
+        }
+        
+        function updateFormCount() {
+            // Find the TOTAL_FORMS field - try different possible IDs
+            let formCount = document.getElementById('id_form-TOTAL_FORMS');
+            if (!formCount) {
+                formCount = document.querySelector('input[name*="TOTAL_FORMS"]');
+            }
+            if (formCount) {
+                const currentCount = fcpItemsContainer.querySelectorAll('.fcp-item').length;
+                formCount.value = currentCount;
+                console.log('Updated form count to:', currentCount);
+            }
+        }
+        
+        // Initial setup
+        updateTotals();
+    }
+});
+</script>
+{% endblock %}
