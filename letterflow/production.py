@@ -19,11 +19,15 @@ ALLOWED_HOSTS = [
     '.herokuapp.com', # Heroku deployment
 ]
 
+# Add Railway's generated domain to allowed hosts
+if os.environ.get('RAILWAY_STATIC_URL'):
+    ALLOWED_HOSTS.append(os.environ.get('RAILWAY_STATIC_URL').replace('https://', '').replace('http://', ''))
+
 # Database configuration for production
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'letterflow'),
+        'NAME': os.environ.get('DB_NAME', 'railway'),
         'USER': os.environ.get('DB_USER', 'postgres'),
         'PASSWORD': os.environ.get('DB_PASSWORD', ''),
         'HOST': os.environ.get('DB_HOST', 'localhost'),
@@ -95,3 +99,7 @@ CSRF_COOKIE_SECURE = False     # Set to True when using HTTPS
 ADMIN_SITE_HEADER = "Compassion International Uganda - LetterFlow Admin"
 ADMIN_SITE_TITLE = "LetterFlow Admin Portal"
 ADMIN_INDEX_TITLE = "Welcome to LetterFlow Administration"
+
+# Force HTTPS in production (uncomment when SSL is configured)
+# SECURE_SSL_REDIRECT = True
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
