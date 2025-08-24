@@ -427,7 +427,7 @@ def get_fcps_for_cluster(request):
     direction = request.GET.get('direction')
     
     if not cluster_id:
-        return JsonResponse({'fcps': []})
+        return JsonResponse({'fcps': [], 'error': 'No cluster ID provided'})
     
     try:
         cluster = Cluster.objects.get(pk=cluster_id)
@@ -440,9 +440,9 @@ def get_fcps_for_cluster(request):
         fcp_data = [{'id': fcp.id, 'code': fcp.code, 'name': fcp.name or ''} for fcp in fcps]
         return JsonResponse({'fcps': fcp_data})
     except Cluster.DoesNotExist:
-        return JsonResponse({'fcps': []})
+        return JsonResponse({'fcps': [], 'error': f'Cluster with ID {cluster_id} not found'})
     except Exception as e:
-        return JsonResponse({'fcps': [], 'error': str(e)})
+        return JsonResponse({'fcps': [], 'error': f'Unexpected error: {str(e)}'})
 
 
 @csrf_exempt
