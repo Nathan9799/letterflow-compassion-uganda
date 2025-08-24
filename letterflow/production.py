@@ -14,14 +14,10 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key-here-change-in-produc
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    '.railway.app',  # Railway deployment
-    '.render.com',   # Render deployment
-    '.herokuapp.com', # Heroku deployment
+    '.railway.app',
+    '.render.com',
+    '.herokuapp.com',
 ]
-
-# Add Railway's generated domain to allowed hosts
-if os.environ.get('RAILWAY_STATIC_URL'):
-    ALLOWED_HOSTS.append(os.environ.get('RAILWAY_STATIC_URL').replace('https://', '').replace('http://', ''))
 
 # Database configuration for production
 DATABASES = {
@@ -36,23 +32,17 @@ DATABASES = {
 }
 
 # Static files configuration
-STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = '/static/'
 
 # Media files configuration
-MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 
-# Security settings for production
+# Security settings
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
-
-# HTTPS settings (uncomment when you have SSL)
-# SECURE_SSL_REDIRECT = True
-# SECURE_HSTS_SECONDS = 31536000
-# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-# SECURE_HSTS_PRELOAD = True
 
 # Logging configuration
 LOGGING = {
@@ -67,39 +57,9 @@ LOGGING = {
         'handlers': ['console'],
         'level': 'INFO',
     },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-    },
 }
-
-# Email configuration (configure for your email provider)
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-
-# Cache configuration (Redis recommended for production)
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-    }
-}
-
-# Session configuration
-SESSION_COOKIE_SECURE = False  # Set to True when using HTTPS
-CSRF_COOKIE_SECURE = False     # Set to True when using HTTPS
 
 # Admin site customization
-ADMIN_SITE_HEADER = "Compassion International Uganda - LetterFlow Admin"
-ADMIN_SITE_TITLE = "LetterFlow Admin Portal"
+ADMIN_SITE_HEADER = "Compassion International Uganda - Letter Tracking System"
+ADMIN_SITE_TITLE = "LetterFlow Admin"
 ADMIN_INDEX_TITLE = "Welcome to LetterFlow Administration"
-
-# Force HTTPS in production (uncomment when SSL is configured)
-# SECURE_SSL_REDIRECT = True
-# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
