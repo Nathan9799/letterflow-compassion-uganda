@@ -18,12 +18,19 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import HttpResponse
+
+def healthcheck(request):
+    """Simple healthcheck endpoint for Railway"""
+    return HttpResponse("OK", content_type="text/plain")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
     path('accounts/', include('accounts.urls')),  # Our custom password change views
-    path('', include('shipping.urls')),
+    path('org/', include('org.urls')),
+    path('shipping/', include('shipping.urls')),
+    path('', healthcheck),  # Healthcheck at root
 ]
 
 if settings.DEBUG:

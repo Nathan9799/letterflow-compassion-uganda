@@ -21,14 +21,14 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '0.0.0.0',
+    '*',  # Allow all hosts temporarily for debugging
 ]
 
 # Add your custom domain if you have one
 if os.environ.get('CUSTOM_DOMAIN'):
     ALLOWED_HOSTS.append(os.environ.get('CUSTOM_DOMAIN'))
 
-# Database
-# Use PostgreSQL by default, with fallback handling
+# Database - Keep it simple for now
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -37,9 +37,6 @@ DATABASES = {
         'PASSWORD': os.environ.get('PGPASSWORD', ''),
         'HOST': os.environ.get('PGHOST', 'localhost'),
         'PORT': os.environ.get('PGPORT', '5432'),
-        'OPTIONS': {
-            'server_side_cursors': False,
-        },
     }
 }
 
@@ -52,59 +49,25 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
-# Security settings for production
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
+# Basic security settings (minimal for now)
 X_FRAME_OPTIONS = 'DENY'
-SECURE_HSTS_SECONDS = 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
 
-# HTTPS settings (enable if you have SSL)
-if os.environ.get('RAILWAY_ENVIRONMENT') == 'production':
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-
-# Logging
+# Simple logging
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
-        },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
-    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
         },
     },
     'root': {
         'handlers': ['console'],
         'level': 'INFO',
     },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'django.db.backends': {
-            'handlers': ['console'],
-            'level': 'WARNING',
-            'propagate': False,
-        },
-    },
 }
 
-# Cache (use simple memory cache for now to avoid startup issues)
+# Simple cache
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
@@ -112,19 +75,10 @@ CACHES = {
     }
 }
 
-# Email configuration (update with your email service)
+# Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@yourdomain.com')
 
 # Session configuration
 SESSION_COOKIE_AGE = 3600  # 1 hour
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-
-# CSRF configuration
-CSRF_TRUSTED_ORIGINS = [
-    f"https://{host}" for host in ALLOWED_HOSTS if host not in ['localhost', '127.0.0.1', '0.0.0.0']
-]
-
-# Add your custom domain to CSRF trusted origins
-if os.environ.get('CUSTOM_DOMAIN'):
-    CSRF_TRUSTED_ORIGINS.append(f"https://{os.environ.get('CUSTOM_DOMAIN')}")
