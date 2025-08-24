@@ -28,21 +28,10 @@ if os.environ.get('CUSTOM_DOMAIN'):
     ALLOWED_HOSTS.append(os.environ.get('CUSTOM_DOMAIN'))
 
 # Database
-# Try to use psycopg3 first, fallback to psycopg2 if needed
-try:
-    import psycopg
-    POSTGRES_ENGINE = 'django.db.backends.postgresql'
-except ImportError:
-    try:
-        import psycopg2
-        POSTGRES_ENGINE = 'django.db.backends.postgresql'
-    except ImportError:
-        # Fallback to SQLite if no PostgreSQL adapter is available
-        POSTGRES_ENGINE = 'django.db.backends.sqlite3'
-
+# Use PostgreSQL by default, with fallback handling
 DATABASES = {
     'default': {
-        'ENGINE': POSTGRES_ENGINE,
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('PGDATABASE', 'railway'),
         'USER': os.environ.get('PGUSER', 'postgres'),
         'PASSWORD': os.environ.get('PGPASSWORD', ''),
@@ -81,9 +70,20 @@ if os.environ.get('RAILWAY_ENVIRONMENT') == 'production':
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
         },
     },
     'root': {
@@ -96,14 +96,19 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
     },
 }
 
-# Cache (use Railway's Redis if available, otherwise use database)
+# Cache (use simple memory cache for now to avoid startup issues)
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-        'LOCATION': 'cache_table',
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
     }
 }
 
