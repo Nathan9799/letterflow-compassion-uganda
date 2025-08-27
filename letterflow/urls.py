@@ -16,8 +16,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.conf import settings
-from django.conf.urls.static import static
 from django.http import HttpResponse
 
 def healthcheck(request):
@@ -26,12 +24,7 @@ def healthcheck(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')),
-    path('accounts/', include('accounts.urls')),  # Our custom password change views
-    path('org/', include('org.urls')),
+    path('accounts/', include('accounts.urls')),
     path('shipping/', include('shipping.urls')),
     path('', healthcheck),  # Healthcheck at root
 ]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
