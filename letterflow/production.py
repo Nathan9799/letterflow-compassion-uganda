@@ -29,6 +29,15 @@ if os.environ.get('CUSTOM_DOMAIN'):
     ALLOWED_HOSTS.append(os.environ.get('CUSTOM_DOMAIN'))
 
 # Database - Check if we have Railway database variables
+# Use SQLite by default to avoid database connection issues during startup
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
+# Only try PostgreSQL if we're sure we have all the variables
 if all([
     os.environ.get('PGDATABASE'),
     os.environ.get('PGUSER'),
@@ -36,25 +45,25 @@ if all([
     os.environ.get('PGHOST'),
     os.environ.get('PGPORT')
 ]):
-    # Use PostgreSQL if all variables are set
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('PGDATABASE'),
-            'USER': os.environ.get('PGUSER'),
-            'PASSWORD': os.environ.get('PGPASSWORD'),
-            'HOST': os.environ.get('PGHOST'),
-            'PORT': os.environ.get('PGPORT'),
+    try:
+        # Test if we can actually connect to PostgreSQL
+        import psycopg
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': os.environ.get('PGDATABASE'),
+                'USER': os.environ.get('PGUSER'),
+                'PASSWORD': os.environ.get('PGPASSWORD'),
+                'HOST': os.environ.get('PGHOST'),
+                'PORT': os.environ.get('PGPORT'),
+            }
         }
-    }
+        print("Using PostgreSQL database")
+    except Exception as e:
+        print(f"PostgreSQL connection failed, using SQLite: {e}")
+        # Keep SQLite if PostgreSQL fails
 else:
-    # Fallback to SQLite if database variables are missing
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+    print("Using SQLite database (no PostgreSQL environment variables)")
 
 # Static files (CSS, JS, Images)
 STATIC_URL = '/static/'

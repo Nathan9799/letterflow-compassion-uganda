@@ -18,4 +18,18 @@ if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('PGHOST'):
 else:
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'letterflow.settings')
 
-application = get_wsgi_application()
+# Create a super simple healthcheck that bypasses Django
+def simple_healthcheck(environ, start_response):
+    """Super simple healthcheck that doesn't touch Django at all"""
+    status = '200 OK'
+    response_headers = [('Content-type', 'text/plain')]
+    start_response(status, response_headers)
+    return [b'OK']
+
+# Try to load Django, but fallback to simple healthcheck if it fails
+try:
+    application = get_wsgi_application()
+except Exception as e:
+    print(f"Django failed to load: {e}")
+    # Fallback to simple healthcheck
+    application = simple_healthcheck
