@@ -6,6 +6,10 @@ import dj_database_url
 from pathlib import Path
 from .settings import *
 
+print("=== PRODUCTION SETTINGS LOADING ===")
+print(f"Current working directory: {os.getcwd()}")
+print(f"Environment variables: {dict(os.environ)}")
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -31,6 +35,7 @@ print(f"Railway Port: {RAILWAY_PORT}")
 print(f"Allowed Hosts: {ALLOWED_HOSTS}")
 
 # Database - Use dj-database-url as you suggested (much better approach)
+print("Setting up database...")
 DATABASES = {
     "default": dj_database_url.config(
         default=os.getenv("DATABASE_URL"),
@@ -40,6 +45,8 @@ DATABASES = {
 }
 
 print(f"Database configured: {DATABASES['default']['ENGINE']}")
+print(f"Database host: {DATABASES['default'].get('HOST', 'N/A')}")
+print(f"Database name: {DATABASES['default'].get('NAME', 'N/A')}")
 
 # Static files (CSS, JS, Images) - Railway optimized
 STATIC_URL = '/static/'
@@ -49,6 +56,9 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = []
 if (BASE_DIR / 'static').exists():
     STATICFILES_DIRS.append(BASE_DIR / 'static')
+
+print(f"Static root: {STATIC_ROOT}")
+print(f"Static files dirs: {STATICFILES_DIRS}")
 
 # WhiteNoise configuration for serving static files
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
@@ -102,3 +112,5 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@yourdomain.co
 # Session configuration
 SESSION_COOKIE_AGE = 3600  # 1 hour
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+print("=== PRODUCTION SETTINGS LOADED SUCCESSFULLY ===")
