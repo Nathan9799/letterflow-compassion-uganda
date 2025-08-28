@@ -84,6 +84,17 @@ class ShipmentItemForm(forms.ModelForm):
             raise ValidationError('Quantity must be greater than 0.')
         return qty
 
+    def clean_fcp(self):
+        fcp = self.cleaned_data.get('fcp')
+        if not fcp:
+            raise ValidationError('FCP is required.')
+        
+        # Validate that FCP belongs to the selected cluster
+        if self.cluster and fcp.cluster != self.cluster:
+            raise ValidationError(f'FCP {fcp.code} does not belong to the selected cluster {self.cluster.name}.')
+        
+        return fcp
+
 
 class ShipmentItemFormSet(BaseInlineFormSet):
     def clean(self):
@@ -97,6 +108,13 @@ class ShipmentItemFormSet(BaseInlineFormSet):
                 if fcp in fcps:
                     raise ValidationError(f'Duplicate FCP {fcp.code} found in shipment.')
                 fcps.append(fcp)
+        
+        # Validate that all FCPs belong to the same cluster
+        if fcps:
+            first_cluster = fcps[0].cluster
+            for fcp in fcps[1:]:
+                if fcp.cluster != first_cluster:
+                    raise ValidationError(f'All FCPs in a shipment must belong to the same cluster. FCP {fcp.code} belongs to {fcp.cluster.name}, but {fcps[0].code} belongs to {first_cluster.name}.')
         
         # Ensure at least one FCP is selected
         if not fcps:

@@ -353,6 +353,52 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Initial setup
         updateTotals();
+        
+        // Cluster change handler for FCP filtering
+        const clusterSelect = document.getElementById('{{ form.cluster.id_for_label }}');
+        if (clusterSelect) {
+            clusterSelect.addEventListener('change', function() {
+                const selectedClusterId = this.value;
+                console.log('Cluster selected:', selectedClusterId);
+                
+                if (selectedClusterId) {
+                    // Fetch FCPs for the selected cluster
+                    fetch(`/shipping/ajax/get-fcps/?cluster_id=${selectedClusterId}&direction={{ direction }}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('FCPs received:', data);
+                            
+                            // Update all FCP dropdowns
+                            document.querySelectorAll('select[name*="fcp"]').forEach(select => {
+                                // Clear current options
+                                select.innerHTML = '<option value="">Select FCP</option>';
+                                
+                                // Add new options
+                                if (data.fcps && data.fcps.length > 0) {
+                                    data.fcps.forEach(fcp => {
+                                        const option = document.createElement('option');
+                                        option.value = fcp.id;
+                                        option.textContent = `${fcp.code} - ${fcp.name || 'Unnamed FCP'}`;
+                                        select.appendChild(option);
+                                    });
+                                }
+                                
+                                // Reset selected value
+                                select.value = '';
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error fetching FCPs:', error);
+                        });
+                } else {
+                    // Clear all FCP dropdowns if no cluster selected
+                    document.querySelectorAll('select[name*="fcp"]').forEach(select => {
+                        select.innerHTML = '<option value="">Select FCP</option>';
+                        select.value = '';
+                    });
+                }
+            });
+        }
     }
 });
 </script>

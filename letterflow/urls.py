@@ -24,7 +24,8 @@ def healthcheck(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/', include('accounts.urls')),
+    path('accounts/', include('django.contrib.auth.urls')),  # Built-in auth (login, logout, etc.)
+    path('accounts/', include('accounts.urls')),  # Custom password change views
     path('shipping/', include('shipping.urls')),
     path('', healthcheck),  # Healthcheck at root
 ]
