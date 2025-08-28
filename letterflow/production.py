@@ -18,7 +18,11 @@ DEBUG = False
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-this-in-production')
 
 # Railway provides the PORT environment variable
-ALLOWED_HOSTS = ["*"]  # Safe for testing as you suggested
+ALLOWED_HOSTS = [
+    "*",  # Safe for testing as you suggested
+    "healthcheck.railway.app",  # Railway healthcheck host
+    "*.railway.app",  # All Railway subdomains
+]
 
 # Add your custom domain if you have one
 if os.environ.get('CUSTOM_DOMAIN'):
