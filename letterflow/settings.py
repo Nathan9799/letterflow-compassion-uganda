@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-your-secret-key-here-change-in-production'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
@@ -163,3 +163,17 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Messages
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
+# CSRF settings for Railway deployment
+CSRF_TRUSTED_ORIGINS = [
+    'https://web-production-40fc9.up.railway.app',
+    'https://*.up.railway.app',
+    'https://*.railway.app',
+    'http://web-production-40fc9.up.railway.app',
+]
+
+# HTTPS settings for Railway
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
