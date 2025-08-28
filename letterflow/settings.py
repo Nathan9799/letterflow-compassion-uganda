@@ -82,36 +82,21 @@ TEMPLATES = [
 WSGI_APPLICATION = 'letterflow.wsgi.application'
 
 
-# Database - Following Railway's proven configuration
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
+# Database - Using Railway's actual variable names
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'railway'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
+    }
+}
 
-# Use Railway's environment variables if available, otherwise fallback to localhost
-if os.environ.get('DATABASE_URL'):
-    # Railway provides DATABASE_URL - use it directly
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('PGDATABASE', 'railway'),
-            'USER': os.environ.get('PGUSER', 'postgres'),
-            'PASSWORD': os.environ.get('PGPASSWORD', ''),
-            'HOST': os.environ.get('PGHOST', 'localhost'),
-            'PORT': os.environ.get('PGPORT', '5432'),
-        }
-    }
-    print(f"Using Railway PostgreSQL: {os.environ.get('PGHOST')}:{os.environ.get('PGPORT')}")
-else:
-    # Fallback to localhost for development
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('PGDATABASE', 'letterflow_dev'),
-            'USER': os.environ.get('PGUSER', 'postgres'),
-            'PASSWORD': os.environ.get('PGPASSWORD', ''),
-            'HOST': os.environ.get('PGHOST', 'localhost'),
-            'PORT': os.environ.get('PGPORT', '5432'),
-        }
-    }
-    print("Using localhost PostgreSQL for development")
+print(f"Database config: HOST={os.environ.get('DB_HOST', 'NOT_SET')}, PORT={os.environ.get('DB_PORT', 'NOT_SET')}")
+print(f"Database config: NAME={os.environ.get('DB_NAME', 'NOT_SET')}, USER={os.environ.get('DB_USER', 'NOT_SET')}")
+print(f"Railway DATABASE_URL exists: {'YES' if os.environ.get('DATABASE_URL') else 'NO'}")
 
 
 # Password validation
