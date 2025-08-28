@@ -9,16 +9,7 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
 
 import os
 
-from django.core.wsgi import get_wsgi_application
-
-# Only use production settings if we're actually on Railway
-# Check for Railway-specific environment variables
-if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('PGHOST'):
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'letterflow.production')
-else:
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'letterflow.settings')
-
-# Create a super simple healthcheck that bypasses Django
+# Create a super simple healthcheck that bypasses Django entirely
 def simple_healthcheck(environ, start_response):
     """Super simple healthcheck that doesn't touch Django at all"""
     status = '200 OK'
@@ -28,8 +19,19 @@ def simple_healthcheck(environ, start_response):
 
 # Try to load Django, but fallback to simple healthcheck if it fails
 try:
+    # Only use production settings if we're actually on Railway
+    # Check for Railway-specific environment variables
+    if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('PGHOST'):
+        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'letterflow.production')
+    else:
+        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'letterflow.settings')
+    
+    from django.core.wsgi import get_wsgi_application
     application = get_wsgi_application()
+    print("Django WSGI application loaded successfully")
+    
 except Exception as e:
     print(f"Django failed to load: {e}")
+    print("Falling back to simple healthcheck")
     # Fallback to simple healthcheck
     application = simple_healthcheck

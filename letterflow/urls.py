@@ -32,10 +32,15 @@ def healthcheck(request):
         # Even if Django fails, return something
         return HttpResponse(f"OK - Basic response", content_type="text/plain")
 
+def test_endpoint(request):
+    """Simple test endpoint to verify the app is responding"""
+    return HttpResponse("Test endpoint working!", content_type="text/plain")
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),  # Built-in auth (login, logout, etc.)
     path('accounts/', include('accounts.urls')),  # Custom password change views
     path('shipping/', include('shipping.urls')),
+    path('test/', test_endpoint),  # Test endpoint
     path('', healthcheck),  # Healthcheck at root
 ]
