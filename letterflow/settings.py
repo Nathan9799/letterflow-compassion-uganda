@@ -85,23 +85,33 @@ WSGI_APPLICATION = 'letterflow.wsgi.application'
 # Database - Following Railway's proven configuration
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# Set default values for the environment variables if they're not already set
-os.environ.setdefault("PGDATABASE", "letterflow_dev")
-os.environ.setdefault("PGUSER", "postgres")
-os.environ.setdefault("PGPASSWORD", "")
-os.environ.setdefault("PGHOST", "localhost")
-os.environ.setdefault("PGPORT", "5432")
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ["PGDATABASE"],
-        'USER': os.environ["PGUSER"],
-        'PASSWORD': os.environ["PGPASSWORD"],
-        'HOST': os.environ["PGHOST"],
-        'PORT': os.environ["PGPORT"],
+# Use Railway's environment variables if available, otherwise fallback to localhost
+if os.environ.get('DATABASE_URL'):
+    # Railway provides DATABASE_URL - use it directly
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('PGDATABASE', 'railway'),
+            'USER': os.environ.get('PGUSER', 'postgres'),
+            'PASSWORD': os.environ.get('PGPASSWORD', ''),
+            'HOST': os.environ.get('PGHOST', 'localhost'),
+            'PORT': os.environ.get('PGPORT', '5432'),
+        }
     }
-}
+    print(f"Using Railway PostgreSQL: {os.environ.get('PGHOST')}:{os.environ.get('PGPORT')}")
+else:
+    # Fallback to localhost for development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('PGDATABASE', 'letterflow_dev'),
+            'USER': os.environ.get('PGUSER', 'postgres'),
+            'PASSWORD': os.environ.get('PGPASSWORD', ''),
+            'HOST': os.environ.get('PGHOST', 'localhost'),
+            'PORT': os.environ.get('PGPORT', '5432'),
+        }
+    }
+    print("Using localhost PostgreSQL for development")
 
 
 # Password validation
