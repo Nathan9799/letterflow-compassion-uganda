@@ -24,10 +24,23 @@ import os
 def healthcheck(request):
     """Simple healthcheck endpoint for Railway - no CSRF required"""
     try:
-        # Just return basic info without touching database
+        # Get actual database info
+        from django.db import connection
+        db_engine = connection.settings_dict.get('ENGINE', 'unknown')
+        db_host = connection.settings_dict.get('HOST', 'unknown')
+        db_name = connection.settings_dict.get('NAME', 'unknown')
+        
+        # Determine database type
+        if 'postgresql' in db_engine:
+            db_type = f"PostgreSQL ({db_host}:{db_name})"
+        elif 'sqlite' in db_engine:
+            db_type = "SQLite"
+        else:
+            db_type = "Unknown"
+        
         return HttpResponse(
             f"OK - Django {os.environ.get('DJANGO_SETTINGS_MODULE', 'unknown')} - "
-            f"Database: {'PostgreSQL' if os.environ.get('PGHOST') else 'SQLite'}",
+            f"Database: {db_type}",
             content_type="text/plain"
         )
     except Exception as e:
