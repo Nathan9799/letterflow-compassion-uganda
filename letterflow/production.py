@@ -28,6 +28,14 @@ ALLOWED_HOSTS = [
 if os.environ.get('CUSTOM_DOMAIN'):
     ALLOWED_HOSTS.append(os.environ.get('CUSTOM_DOMAIN'))
 
+# Railway-specific settings
+RAILWAY_ENVIRONMENT = os.environ.get('RAILWAY_ENVIRONMENT', 'development')
+RAILWAY_PORT = os.environ.get('PORT', '8000')
+
+print(f"Railway Environment: {RAILWAY_ENVIRONMENT}")
+print(f"Railway Port: {RAILWAY_PORT}")
+print(f"Allowed Hosts: {ALLOWED_HOSTS}")
+
 # Database - Check if we have Railway database variables
 # Use SQLite by default to avoid database connection issues during startup
 DATABASES = {
@@ -56,6 +64,10 @@ if all([
                 'PASSWORD': os.environ.get('PGPASSWORD'),
                 'HOST': os.environ.get('PGHOST'),
                 'PORT': os.environ.get('PGPORT'),
+                'OPTIONS': {
+                    'connect_timeout': 10,
+                    'sslmode': 'require'
+                }
             }
         }
         print("Using PostgreSQL database")
@@ -64,8 +76,12 @@ if all([
         # Keep SQLite if PostgreSQL fails
 else:
     print("Using SQLite database (no PostgreSQL environment variables)")
+    print(f"PGHOST: {os.environ.get('PGHOST')}")
+    print(f"PGDATABASE: {os.environ.get('PGDATABASE')}")
+    print(f"PGUSER: {os.environ.get('PGUSER')}")
+    print(f"PGPORT: {os.environ.get('PGPORT')}")
 
-# Static files (CSS, JS, Images)
+# Static files (CSS, JS, Images) - Railway optimized
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
@@ -73,6 +89,21 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = []
 if (BASE_DIR / 'static').exists():
     STATICFILES_DIRS.append(BASE_DIR / 'static')
+
+# WhiteNoise configuration for serving static files
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Add WhiteNoise middleware for static files
+MIDDLEWARE = [
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add this first
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
 
 # Basic security settings (minimal for now)
 X_FRAME_OPTIONS = 'DENY'

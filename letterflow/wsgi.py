@@ -21,10 +21,12 @@ def simple_healthcheck(environ, start_response):
 try:
     # Only use production settings if we're actually on Railway
     # Check for Railway-specific environment variables
-    if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('PGHOST'):
+    if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('PGHOST') or os.environ.get('PORT'):
         os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'letterflow.production')
+        print("Using production settings for Railway")
     else:
         os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'letterflow.settings')
+        print("Using development settings")
     
     from django.core.wsgi import get_wsgi_application
     application = get_wsgi_application()

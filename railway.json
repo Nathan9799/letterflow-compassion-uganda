@@ -17,6 +17,6 @@
     "restartPolicyMaxRetries": 10,
     "healthcheckPath": "/",
     "healthcheckTimeout": 300,
-    "startCommand": "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn letterflow.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+    "startCommand": "python manage.py migrate --run-syncdb && python manage.py collectstatic --noinput --clear && gunicorn letterflow.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --preload"
   }
 }
