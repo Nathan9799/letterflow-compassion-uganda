@@ -104,8 +104,8 @@ def test_endpoint(request):
     return HttpResponse("Test endpoint working!", content_type="text/plain")
 
 def root_redirect(request):
-    """Redirect root URL to the main shipping dashboard"""
-    return redirect('shipping:dashboard')
+    """Redirect root URL to the login page for security"""
+    return redirect('login')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
