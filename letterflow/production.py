@@ -113,4 +113,17 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@yourdomain.co
 SESSION_COOKIE_AGE = 3600  # 1 hour
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
+# CSRF and Security settings for Railway
+CSRF_TRUSTED_ORIGINS = [
+    'https://web-production-40fc9.up.railway.app',
+    'https://*.up.railway.app',
+    'https://*.railway.app',
+]
+
+# HTTPS settings
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = False  # Set to True if you want to force HTTPS
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
 print("=== PRODUCTION SETTINGS LOADED SUCCESSFULLY ===")
