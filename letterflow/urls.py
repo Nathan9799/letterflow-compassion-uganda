@@ -19,6 +19,8 @@ from django.urls import path, include
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import redirect
+from django.contrib.auth import logout
+from django.contrib.auth.decorators import login_required
 import os
 
 @csrf_exempt
@@ -105,7 +107,23 @@ def test_endpoint(request):
 
 def root_redirect(request):
     """Redirect root URL to the login page for security"""
+    # Force logout any existing session to ensure clean state
+    if request.user.is_authenticated:
+        logout(request)
     return redirect('login')
+
+def debug_auth(request):
+    """Debug endpoint to see authentication state"""
+    auth_info = f"""
+Authentication Debug Info:
+========================
+User: {request.user}
+Is Authenticated: {request.user.is_authenticated}
+Session ID: {request.session.session_key}
+User ID: {request.user.id if request.user.is_authenticated else 'None'}
+Username: {request.user.username if request.user.is_authenticated else 'None'}
+    """
+    return HttpResponse(auth_info, content_type="text/plain")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -115,5 +133,6 @@ urlpatterns = [
     path('db-test/', db_test),  # Database test endpoint
     path('test/', test_endpoint),  # Test endpoint
     path('health/', healthcheck),  # Healthcheck at /health/
-    path('', root_redirect),  # Root URL redirects to dashboard
+    path('debug-auth/', debug_auth),  # Debug authentication state
+    path('', root_redirect),  # Root URL redirects to login
 ]
