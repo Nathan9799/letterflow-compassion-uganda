@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import redirect
 import os
 
 @csrf_exempt
@@ -102,6 +103,10 @@ def test_endpoint(request):
     """Simple test endpoint to verify the app is responding"""
     return HttpResponse("Test endpoint working!", content_type="text/plain")
 
+def root_redirect(request):
+    """Redirect root URL to the main shipping dashboard"""
+    return redirect('shipping:dashboard')
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),  # Built-in auth (login, logout, etc.)
@@ -109,5 +114,6 @@ urlpatterns = [
     path('shipping/', include('shipping.urls')),
     path('db-test/', db_test),  # Database test endpoint
     path('test/', test_endpoint),  # Test endpoint
-    path('', healthcheck),  # Healthcheck at root
+    path('health/', healthcheck),  # Healthcheck at /health/
+    path('', root_redirect),  # Root URL redirects to dashboard
 ]
