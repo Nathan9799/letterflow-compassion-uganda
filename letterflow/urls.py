@@ -17,10 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 import os
 
+@csrf_exempt
 def healthcheck(request):
-    """Simple healthcheck endpoint for Railway - no database access"""
+    """Simple healthcheck endpoint for Railway - no CSRF required"""
     try:
         # Just return basic info without touching database
         return HttpResponse(
