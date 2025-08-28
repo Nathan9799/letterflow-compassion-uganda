@@ -66,6 +66,10 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # Add WhiteNoise to existing middleware (don't override)
 MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 
+# WhiteNoise settings for better static file handling
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = True
+
 # Basic security settings (minimal for now)
 X_FRAME_OPTIONS = 'DENY'
 
@@ -118,6 +122,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://web-production-40fc9.up.railway.app',
     'https://*.up.railway.app',
     'https://*.railway.app',
+    'http://web-production-40fc9.up.railway.app',  # Add HTTP version too
 ]
 
 # HTTPS settings
@@ -125,5 +130,15 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = False  # Set to True if you want to force HTTPS
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+
+# Fix static files issue
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = []
+
+# Ensure staticfiles directory exists
+import os
+if not os.path.exists(STATIC_ROOT):
+    os.makedirs(STATIC_ROOT, exist_ok=True)
+    print(f"Created staticfiles directory: {STATIC_ROOT}")
 
 print("=== PRODUCTION SETTINGS LOADED SUCCESSFULLY ===")
