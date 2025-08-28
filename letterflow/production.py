@@ -4,11 +4,9 @@ Production settings for Railway deployment
 import os
 import dj_database_url
 from pathlib import Path
-from .settings import *
 
 print("=== PRODUCTION SETTINGS LOADING ===")
 print(f"Current working directory: {os.getcwd()}")
-print(f"Environment variables: {dict(os.environ)}")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -62,13 +60,6 @@ print(f"Static files dirs: {STATICFILES_DIRS}")
 
 # WhiteNoise configuration for serving static files
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
-# Add WhiteNoise to existing middleware (don't override)
-MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
-
-# WhiteNoise settings for better static file handling
-WHITENOISE_USE_FINDERS = True
-WHITENOISE_AUTOREFRESH = True
 
 # Basic security settings (minimal for now)
 X_FRAME_OPTIONS = 'DENY'
@@ -136,9 +127,18 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = []
 
 # Ensure staticfiles directory exists
-import os
 if not os.path.exists(STATIC_ROOT):
     os.makedirs(STATIC_ROOT, exist_ok=True)
     print(f"Created staticfiles directory: {STATIC_ROOT}")
+
+# NOW import base settings (database is already configured)
+from .settings import *
+
+# Override any conflicting settings
+MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
+
+# WhiteNoise settings for better static file handling
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = True
 
 print("=== PRODUCTION SETTINGS LOADED SUCCESSFULLY ===")
