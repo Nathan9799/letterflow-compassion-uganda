@@ -2,6 +2,7 @@
 Production settings for Railway deployment
 """
 import os
+import dj_database_url
 from pathlib import Path
 from .settings import *
 
@@ -15,14 +16,7 @@ DEBUG = False
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-this-in-production')
 
 # Railway provides the PORT environment variable
-ALLOWED_HOSTS = [
-    os.environ.get('RAILWAY_STATIC_URL', 'localhost'),
-    os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'localhost'),
-    'localhost',
-    '127.0.0.1',
-    '0.0.0.0',
-    '*',  # Allow all hosts temporarily for debugging
-]
+ALLOWED_HOSTS = ["*"]  # Safe for testing as you suggested
 
 # Add your custom domain if you have one
 if os.environ.get('CUSTOM_DOMAIN'):
@@ -36,74 +30,31 @@ print(f"Railway Environment: {RAILWAY_ENVIRONMENT}")
 print(f"Railway Port: {RAILWAY_PORT}")
 print(f"Allowed Hosts: {ALLOWED_HOSTS}")
 
-# Database - Check if we have Railway database variables
-# Use SQLite by default to avoid database connection issues during startup
+# Database - Use dj-database-url as you suggested (much better approach)
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    "default": dj_database_url.config(
+        default=os.getenv("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
 
-# Only try PostgreSQL if we're sure we have all the variables
-if all([
-    os.environ.get('PGDATABASE'),
-    os.environ.get('PGUSER'),
-    os.environ.get('PGPASSWORD'),
-    os.environ.get('PGHOST'),
-    os.environ.get('PGPORT')
-]):
-    try:
-        # Test if we can actually connect to PostgreSQL
-        import psycopg
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.postgresql',
-                'NAME': os.environ.get('PGDATABASE'),
-                'USER': os.environ.get('PGUSER'),
-                'PASSWORD': os.environ.get('PGPASSWORD'),
-                'HOST': os.environ.get('PGHOST'),
-                'PORT': os.environ.get('PGPORT'),
-                'OPTIONS': {
-                    'connect_timeout': 10,
-                    'sslmode': 'require'
-                }
-            }
-        }
-        print("Using PostgreSQL database")
-    except Exception as e:
-        print(f"PostgreSQL connection failed, using SQLite: {e}")
-        # Keep SQLite if PostgreSQL fails
-else:
-    print("Using SQLite database (no PostgreSQL environment variables)")
-    print(f"PGHOST: {os.environ.get('PGHOST')}")
-    print(f"PGDATABASE: {os.environ.get('PGDATABASE')}")
-    print(f"PGUSER: {os.environ.get('PGUSER')}")
-    print(f"PGPORT: {os.environ.get('PGPORT')}")
+print(f"Database configured: {DATABASES['default']['ENGINE']}")
 
 # Static files (CSS, JS, Images) - Railway optimized
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Extra places for collectstatic to find static files - only if they exist
+# Only include STATICFILES_DIRS if you *actually* have a static/ folder in project root
 STATICFILES_DIRS = []
 if (BASE_DIR / 'static').exists():
     STATICFILES_DIRS.append(BASE_DIR / 'static')
 
 # WhiteNoise configuration for serving static files
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# Add WhiteNoise middleware for static files
-MIDDLEWARE = [
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add this first
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
+# Add WhiteNoise to existing middleware (don't override)
+MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 
 # Basic security settings (minimal for now)
 X_FRAME_OPTIONS = 'DENY'
@@ -151,6 +102,3 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@yourdomain.co
 # Session configuration
 SESSION_COOKIE_AGE = 3600  # 1 hour
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-
-# Disable database operations during startup to prevent crashes
-DATABASE_CONNECTION_MAX_AGE = 0
