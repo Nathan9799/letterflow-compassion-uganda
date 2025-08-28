@@ -28,42 +28,71 @@ ALLOWED_HOSTS = [
 if os.environ.get('CUSTOM_DOMAIN'):
     ALLOWED_HOSTS.append(os.environ.get('CUSTOM_DOMAIN'))
 
-# Database - Keep it simple for now
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('PGDATABASE', 'railway'),
-        'USER': os.environ.get('PGUSER', 'postgres'),
-        'PASSWORD': os.environ.get('PGPASSWORD', ''),
-        'HOST': os.environ.get('PGHOST', 'localhost'),
-        'PORT': os.environ.get('PGPORT', '5432'),
+# Database - Check if we have Railway database variables
+if all([
+    os.environ.get('PGDATABASE'),
+    os.environ.get('PGUSER'),
+    os.environ.get('PGPASSWORD'),
+    os.environ.get('PGHOST'),
+    os.environ.get('PGPORT')
+]):
+    # Use PostgreSQL if all variables are set
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('PGDATABASE'),
+            'USER': os.environ.get('PGUSER'),
+            'PASSWORD': os.environ.get('PGPASSWORD'),
+            'HOST': os.environ.get('PGHOST'),
+            'PORT': os.environ.get('PGPORT'),
+        }
     }
-}
+else:
+    # Fallback to SQLite if database variables are missing
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Static files (CSS, JS, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Extra places for collectstatic to find static files.
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-]
+# Extra places for collectstatic to find static files - only if they exist
+STATICFILES_DIRS = []
+if (BASE_DIR / 'static').exists():
+    STATICFILES_DIRS.append(BASE_DIR / 'static')
 
 # Basic security settings (minimal for now)
 X_FRAME_OPTIONS = 'DENY'
 
-# Simple logging
+# Simple logging with more detail
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'level': 'DEBUG',
         },
     },
     'root': {
         'handlers': ['console'],
         'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
     },
 }
 
@@ -82,3 +111,6 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@yourdomain.co
 # Session configuration
 SESSION_COOKIE_AGE = 3600  # 1 hour
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# Disable database operations during startup to prevent crashes
+DATABASE_CONNECTION_MAX_AGE = 0

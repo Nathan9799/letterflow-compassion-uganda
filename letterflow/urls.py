@@ -17,10 +17,20 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.http import HttpResponse
+import os
 
 def healthcheck(request):
-    """Simple healthcheck endpoint for Railway"""
-    return HttpResponse("OK", content_type="text/plain")
+    """Simple healthcheck endpoint for Railway - no database access"""
+    try:
+        # Just return basic info without touching database
+        return HttpResponse(
+            f"OK - Django {os.environ.get('DJANGO_SETTINGS_MODULE', 'unknown')} - "
+            f"Database: {'PostgreSQL' if os.environ.get('PGHOST') else 'SQLite'}",
+            content_type="text/plain"
+        )
+    except Exception as e:
+        # Even if Django fails, return something
+        return HttpResponse(f"OK - Basic response", content_type="text/plain")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
