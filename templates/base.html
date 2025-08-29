@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -70,6 +71,27 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+        }
+
+        /* Compassion Logo Styling */
+        .navbar-logo {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+            transition: var(--compassion-transition);
+        }
+
+        .navbar-logo:hover {
+            transform: scale(1.05);
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+        }
+
+        /* Responsive logo sizing */
+        @media (max-width: 768px) {
+            .navbar-logo {
+                height: 32px;
+            }
         }
 
         .navbar-nav .nav-link {
@@ -440,7 +462,7 @@
     <nav class="navbar navbar-expand-lg navbar-light fixed-top">
         <div class="container">
             <a class="navbar-brand" href="{% if user.is_authenticated %}{% url 'shipping:dashboard' %}{% else %}#{% endif %}">
-                <i class="bi bi-globe"></i>
+                <img src="{% static 'images/compassion logo.png' %}" alt="Compassion International Uganda" class="navbar-logo me-2" style="height: 40px; width: auto;">
                 <span>Compassion International Uganda</span>
             </a>
             
@@ -507,7 +529,7 @@
     <footer class="footer">
         <div class="container">
             <p>
-                <i class="bi bi-globe text-primary me-2"></i>
+                <img src="{% static 'images/compassion logo.png' %}" alt="Compassion International Uganda" class="footer-logo me-2" style="height: 24px; width: auto;">
                 Releasing children from poverty in Jesus' name
             </p>
             <p class="small opacity-75">
