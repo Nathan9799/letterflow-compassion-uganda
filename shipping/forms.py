@@ -71,9 +71,13 @@ class ShipmentItemForm(forms.ModelForm):
             # Filter FCPs by cluster
             fcp_queryset = FCP.objects.filter(cluster=self.cluster)
             
-            # For outgoing shipments, exclude collection centre FCP
+            # For outgoing shipments, we now allow collection centre FCPs
+            # This makes sense because collection centres might need supplies too
+            # (office supplies, forms, training materials, etc.)
             if self.direction == Shipment.Direction.OUT:
-                fcp_queryset = fcp_queryset.filter(is_collection_centre=False)
+                # Include all FCPs including collection centres
+                # Collection centres can receive packages just like regular FCPs
+                pass
             
             self.fields['fcp'].queryset = fcp_queryset
             self.fields['fcp'].empty_label = "Select FCP"
@@ -92,6 +96,11 @@ class ShipmentItemForm(forms.ModelForm):
         # Validate that FCP belongs to the selected cluster
         if self.cluster and fcp.cluster != self.cluster:
             raise ValidationError(f'FCP {fcp.code} does not belong to the selected cluster {self.cluster.name}.')
+        
+        # Additional validation for collection centre FCPs
+        if fcp.is_collection_centre and self.direction == Shipment.Direction.OUT:
+            # This is now allowed - collection centres can receive packages
+            pass
         
         return fcp
 
