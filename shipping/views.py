@@ -203,10 +203,11 @@ def create_outgoing_shipment(request):
     if request.user.role == User.Role.SDSA:
         managed_clusters = request.user.managed_clusters.all()
         if managed_clusters:
-            # Get all FCPs from managed clusters (excluding collection centres for outgoing)
+            # Get all FCPs from managed clusters (including collection centres)
+            # Collection centres can now receive packages for their own use
             available_fcps = FCP.objects.filter(
-                cluster__in=managed_clusters,
-                is_collection_centre=False
+                cluster__in=managed_clusters
+                # Removed is_collection_centre=False filter to allow collection centres
             )
             
             # Set the queryset for all FCP dropdowns
@@ -433,9 +434,11 @@ def get_fcps_for_cluster(request):
         cluster = Cluster.objects.get(pk=cluster_id)
         fcps = FCP.objects.filter(cluster=cluster)
         
-        # For outgoing shipments, exclude collection centre
+        # For outgoing shipments, we now allow collection centre FCPs
+        # Collection centres can receive packages for their own use
         if direction == 'OUT':
-            fcps = fcps.filter(is_collection_centre=False)
+            # Include all FCPs including collection centres
+            pass
         
         fcp_data = [{'id': fcp.id, 'code': fcp.code, 'name': fcp.name or ''} for fcp in fcps]
         return JsonResponse({'fcps': fcp_data})
