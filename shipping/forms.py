@@ -223,3 +223,71 @@ class MarkDistributedForm(forms.Form):
                 raise ValidationError('At least one FCP must be marked as distributed.')
         
         return cleaned_data
+
+
+class BulkUserImportForm(forms.Form):
+    """Form for bulk importing users via CSV"""
+    csv_file = forms.FileField(
+        label='CSV File',
+        help_text='Upload a CSV file with user details. Download the template below for the correct format.',
+        widget=forms.FileInput(attrs={
+            'class': 'form-control',
+            'accept': '.csv'
+        })
+    )
+    
+    # Optional: Default password for all users
+    default_password = forms.CharField(
+        label='Default Password',
+        help_text='Password to use for all users (leave blank to use username as password)',
+        required=False,
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        initial='password123'
+    )
+    
+    # Optional: Send welcome emails
+    send_welcome_emails = forms.BooleanField(
+        label='Send Welcome Emails',
+        help_text='Send welcome emails to new users (requires email configuration)',
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+    
+    def clean_csv_file(self):
+        csv_file = self.cleaned_data.get('csv_file')
+        if csv_file:
+            # Check file extension
+            if not csv_file.name.endswith('.csv'):
+                raise ValidationError('Please upload a CSV file.')
+            
+            # Check file size (max 5MB)
+            if csv_file.size > 5 * 1024 * 1024:
+                raise ValidationError('File size must be less than 5MB.')
+            
+            # Try to read the first few lines to validate format
+            try:
+                csv_file.seek(0)
+                content = csv_file.read().decode('utf-8')
+                lines = content.split('\n')
+                
+                if len(lines) < 2:
+                    raise ValidationError('CSV file must have at least a header row and one data row.')
+                
+                # Check if required columns exist
+                header = lines[0].lower().strip().split(',')
+                required_columns = ['username', 'first_name', 'last_name', 'email', 'role']
+                
+                for col in required_columns:
+                    if col not in header:
+                        raise ValidationError(f'CSV must contain a "{col}" column.')
+                
+                # Reset file pointer
+                csv_file.seek(0)
+                
+            except UnicodeDecodeError:
+                raise ValidationError('CSV file must be encoded in UTF-8.')
+            except Exception as e:
+                raise ValidationError(f'Error reading CSV file: {str(e)}')
+        
+        return csv_file

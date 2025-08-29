@@ -29,4 +29,8 @@ urlpatterns = [
     
     # AJAX
     path('ajax/get-fcps/', views.get_fcps_for_cluster, name='get_fcps_for_cluster'),
+
+    # Bulk operations
+    path('users/bulk-import/', views.bulk_user_import, name='bulk_user_import'),
+    path('users/download-template/', views.download_csv_template, name='download_csv_template'),
 ]

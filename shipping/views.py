@@ -24,6 +24,7 @@ from .forms import (
 )
 from org.models import Cluster, FCP
 from accounts.models import User
+from .forms import BulkUserImportForm
 
 
 def user_can_access_shipment(user, shipment):
@@ -454,3 +455,182 @@ def custom_logout(request):
     """Custom logout view that handles both GET and POST requests."""
     logout(request)
     return redirect('login')
+
+
+@login_required
+def bulk_user_import(request):
+    """Bulk import users from CSV file"""
+    if not request.user.is_admin():
+        messages.error(request, 'Only admin users can import users in bulk.')
+        return redirect('shipping:dashboard')
+    
+    if request.method == 'POST':
+        form = BulkUserImportForm(request.POST, request.FILES)
+        if form.is_valid():
+            csv_file = form.cleaned_data['csv_file']
+            default_password = form.cleaned_data['default_password']
+            send_welcome_emails = form.cleaned_data['send_welcome_emails']
+            
+            try:
+                import csv
+                from django.contrib.auth import get_user_model
+                from django.db import transaction
+                
+                User = get_user_model()
+                results = {
+                    'success': [],
+                    'errors': [],
+                    'total_processed': 0
+                }
+                
+                # Read CSV file
+                content = csv_file.read().decode('utf-8')
+                reader = csv.DictReader(content.splitlines())
+                
+                with transaction.atomic():
+                    for row_num, row in enumerate(reader, start=2):  # Start at 2 for row numbers
+                        try:
+                            # Clean and validate row data
+                            username = row['username'].strip()
+                            first_name = row['first_name'].strip()
+                            last_name = row['last_name'].strip()
+                            email = row['email'].strip()
+                            role = row['role'].strip().upper()
+                            
+                            # Skip empty rows
+                            if not username or not first_name or not last_name:
+                                continue
+                            
+                            # Validate role
+                            if role not in [User.Role.SDSA, User.Role.CC, User.Role.ADMIN]:
+                                results['errors'].append(f'Row {row_num}: Invalid role "{role}". Must be SDSA, CC, or ADMIN.')
+                                continue
+                            
+                            # Check if user already exists
+                            if User.objects.filter(username=username).exists():
+                                results['errors'].append(f'Row {row_num}: Username "{username}" already exists.')
+                                continue
+                            
+                            if email and User.objects.filter(email=email).exists():
+                                results['errors'].append(f'Row {row_num}: Email "{email}" already exists.')
+                                continue
+                            
+                            # Create user
+                            password = default_password or username
+                            user = User.objects.create_user(
+                                username=username,
+                                email=email,
+                                password=password,
+                                first_name=first_name,
+                                last_name=last_name,
+                                role=role
+                            )
+                            
+                            # Handle role-specific setup
+                            if role == User.Role.SDSA:
+                                # Handle cluster assignment if provided
+                                cluster_name = row.get('cluster', '').strip()
+                                if cluster_name:
+                                    try:
+                                        cluster = Cluster.objects.get(name__iexact=cluster_name)
+                                        user.managed_clusters.add(cluster)
+                                    except Cluster.DoesNotExist:
+                                        results['errors'].append(f'Row {row_num}: Cluster "{cluster_name}" not found.')
+                            
+                            elif role == User.Role.CC:
+                                # Handle collection centre FCP assignment if provided
+                                fcp_code = row.get('fcp_code', '').strip()
+                                if fcp_code:
+                                    try:
+                                        fcp = FCP.objects.get(code__iexact=fcp_code, is_collection_centre=True)
+                                        # Create collection centre user link
+                                        from accounts.models import CollectionCentreUser
+                                        CollectionCentreUser.objects.create(user=user, fcp=fcp)
+                                    except FCP.DoesNotExist:
+                                        results['errors'].append(f'Row {row_num}: Collection Centre FCP "{fcp_code}" not found.')
+                            
+                            results['success'].append(f'Row {row_num}: User "{username}" created successfully.')
+                            results['total_processed'] += 1
+                            
+                        except Exception as e:
+                            results['errors'].append(f'Row {row_num}: Error creating user: {str(e)}')
+                
+                # Show results
+                if results['success']:
+                    messages.success(request, f'Successfully created {results["total_processed"]} users!')
+                if results['errors']:
+                    for error in results['errors']:
+                        messages.warning(request, error)
+                
+                return redirect('shipping:bulk_user_import')
+                
+            except Exception as e:
+                messages.error(request, f'Error processing CSV file: {str(e)}')
+    else:
+        form = BulkUserImportForm()
+    
+    context = {
+        'form': form,
+        'title': 'Bulk User Import'
+    }
+    return render(request, 'shipping/bulk_user_import.html', context)
+
+
+@login_required
+def download_csv_template(request):
+    """Download CSV template for bulk user import"""
+    if not request.user.is_admin():
+        messages.error(request, 'Only admin users can download templates.')
+        return redirect('shipping:dashboard')
+    
+    import csv
+    from django.http import HttpResponse
+    
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="bulk_user_import_template.csv"'
+    
+    writer = csv.writer(response)
+    
+    # Write header
+    writer.writerow([
+        'username',
+        'first_name', 
+        'last_name',
+        'email',
+        'role',
+        'cluster',
+        'fcp_code'
+    ])
+    
+    # Write example rows
+    writer.writerow([
+        'john_doe',
+        'John',
+        'Doe',
+        'john@example.com',
+        'SDSA',
+        'Mbarara',
+        ''
+    ])
+    
+    writer.writerow([
+        'jane_smith',
+        'Jane',
+        'Smith',
+        'jane@example.com',
+        'CC',
+        '',
+        'UG0249'
+    ])
+    
+    writer.writerow([
+        'admin_user',
+        'Admin',
+        'User',
+        'admin@example.com',
+        'ADMIN',
+        '',
+        ''
+    ])
+    
+    return response
