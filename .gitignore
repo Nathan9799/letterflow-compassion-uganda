@@ -66,9 +66,9 @@ db.sqlite3
 db.sqlite3-journal
 media/
 
-# Static files
+# Static files - allow source static files but ignore collected staticfiles
 staticfiles/
-static/
+# static/  # Commented out to allow source static files
 
 # Coverage reports
 htmlcov/
