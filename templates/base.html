@@ -61,7 +61,7 @@
             color: var(--compassion-primary) !important;
             text-decoration: none;
             display: flex;
-            align-items: center;
+            align-items: baseline;
             gap: 0.75rem;
             /* Ensure no background boxes around logo */
             background: transparent;
@@ -69,7 +69,7 @@
             outline: none;
             padding: 0;
             margin: 0;
-            /* Perfect vertical alignment */
+            /* Perfect horizontal alignment like text in a sentence */
             line-height: 1;
             height: auto;
         }
@@ -80,20 +80,20 @@
             border: none;
             outline: none;
             box-shadow: none;
-            /* Ensure seamless integration */
-            vertical-align: middle;
+            /* Align to text baseline like words in a sentence */
+            vertical-align: baseline;
             display: inline-block;
-            /* Perfect alignment with text */
-            align-self: center;
+            /* Sit on same line as text */
+            align-self: baseline;
             flex-shrink: 0;
         }
 
         .navbar-brand span {
-            /* Ensure text aligns perfectly with logo */
+            /* Ensure text aligns perfectly with logo on same baseline */
             display: inline-block;
-            vertical-align: middle;
+            vertical-align: baseline;
             line-height: 1.2;
-            align-self: center;
+            align-self: baseline;
         }
 
         .navbar-brand i {
